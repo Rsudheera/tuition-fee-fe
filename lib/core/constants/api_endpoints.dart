@@ -18,20 +18,20 @@ class ApiEndpoints {
 
   // Class endpoints
   static const String createClass = '$classes/create';
-  static const String getClasses = '$classes';
+  static const String getClasses = classes;
   static const String updateClass = '$classes/update';
   static const String deleteClass = '$classes/delete';
 
   // Student endpoints
   static const String createStudent = '$students/create';
-  static const String getStudents = '$students';
+  static const String getStudents = students;
   static const String updateStudent = '$students/update';
   static const String deleteStudent = '$students/delete';
   static const String assignStudentToClass = '$students/assign-class';
 
   // Payment endpoints
   static const String createPayment = '$payments/create';
-  static const String getPayments = '$payments';
+  static const String getPayments = payments;
   static const String getPaymentsByStudent = '$payments/student';
   static const String getPaymentsByClass = '$payments/class';
   static const String updatePaymentStatus = '$payments/status';

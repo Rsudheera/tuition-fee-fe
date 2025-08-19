@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/themes/app_theme.dart';
 import 'presentation/screens/auth/login_screen.dart';
+import 'presentation/screens/auth/register_screen.dart';
 import 'presentation/screens/dashboard/dashboard_screen.dart';
 
 void main() {
@@ -18,6 +19,7 @@ class TuitionFeeApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
         '/dashboard': (context) => const DashboardScreen(),
       },
       debugShowCheckedModeBanner: false,

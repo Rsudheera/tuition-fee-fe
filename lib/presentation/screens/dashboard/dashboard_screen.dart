@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../classes/classes_list_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -198,7 +199,7 @@ class ClassesTab extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(child: Text('Classes screen - To be implemented')),
+      body: const ClassesListScreen(),
     );
   }
 }

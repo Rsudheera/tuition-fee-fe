@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../classes/classes_list_screen.dart';
+import '../profile/profile_screen.dart';
 import '../students/students_list_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -248,21 +249,8 @@ class ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              // TODO: Implement logout
-              Navigator.of(context).pushReplacementNamed('/login');
-            },
-          ),
-        ],
-      ),
-      body: const Center(child: Text('Profile screen - To be implemented')),
-    );
+    // We're reusing the ProfileScreen but without the app bar
+    // since it's already in a tab with its own app bar
+    return const ProfileScreen();
   }
 }

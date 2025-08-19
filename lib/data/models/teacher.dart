@@ -5,6 +5,7 @@ class Teacher {
   final String email;
   final String phone;
   final String? profileImage;
+  final List<String> educationalQualifications;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -15,6 +16,7 @@ class Teacher {
     required this.email,
     required this.phone,
     this.profileImage,
+    this.educationalQualifications = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -29,6 +31,9 @@ class Teacher {
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
       profileImage: json['profileImage'],
+      educationalQualifications: json['educationalQualifications'] != null
+          ? List<String>.from(json['educationalQualifications'])
+          : [],
       createdAt: DateTime.parse(
         json['createdAt'] ?? DateTime.now().toIso8601String(),
       ),
@@ -46,6 +51,7 @@ class Teacher {
       'email': email,
       'phone': phone,
       'profileImage': profileImage,
+      'educationalQualifications': educationalQualifications,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -58,6 +64,7 @@ class Teacher {
     String? email,
     String? phone,
     String? profileImage,
+    List<String>? educationalQualifications,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -68,6 +75,8 @@ class Teacher {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       profileImage: profileImage ?? this.profileImage,
+      educationalQualifications:
+          educationalQualifications ?? this.educationalQualifications,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

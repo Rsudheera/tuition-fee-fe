@@ -72,12 +72,16 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Students')),
+      appBar: AppBar(
+        title: const Text('Students'),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const StudentFormScreen()),
+            context, 
+            MaterialPageRoute(
+              builder: (context) => const StudentFormScreen(),
+            ),
           ).then((value) {
             if (value == true) {
               // Refresh the student list if a new student was added
@@ -239,9 +243,7 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
                                           color: student.isActive
                                               ? Colors.green.withOpacity(0.1)
                                               : Colors.red.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Text(
                                           student.isActive

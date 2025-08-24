@@ -3,6 +3,7 @@ import '../../../core/utils/mock_class_data.dart';
 import '../../../data/models/tuition_class.dart';
 import '../../../data/repositories/class_repository.dart';
 import '../../widgets/classes/class_card.dart';
+import 'class_form_screen.dart';
 
 class ClassesListScreen extends StatefulWidget {
   const ClassesListScreen({super.key});
@@ -89,7 +90,16 @@ class _ClassesListScreenState extends State<ClassesListScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // TODO: Navigate to create class screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ClassFormScreen(),
+                  ),
+                ).then((result) {
+                  if (result == true) {
+                    _fetchClasses();
+                  }
+                });
               },
               child: const Text('Create New Class'),
             ),
@@ -98,35 +108,53 @@ class _ClassesListScreenState extends State<ClassesListScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _fetchClasses,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.7, // Adjusted to give more height to each card
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ClassFormScreen()),
+          ).then((result) {
+            if (result == true) {
+              _fetchClasses();
+            }
+          });
+        },
+        child: const Icon(Icons.add),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _fetchClasses,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio:
+                  0.7, // Adjusted to give more height to each card
+            ),
+            itemCount: _classes.length,
+            itemBuilder: (context, index) {
+              final tuitionClass = _classes[index];
+              return ClassCard(
+                tuitionClass: tuitionClass,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ClassFormScreen(tuitionClass: tuitionClass),
+                    ),
+                  ).then((result) {
+                    if (result == true) {
+                      _fetchClasses();
+                    }
+                  });
+                },
+              );
+            },
           ),
-          itemCount: _classes.length,
-          itemBuilder: (context, index) {
-            final tuitionClass = _classes[index];
-            return ClassCard(
-              tuitionClass: tuitionClass,
-              onTap: () {
-                // TODO: Navigate to class detail screen
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => ClassDetailScreen(
-                //       classId: tuitionClass.id,
-                //     ),
-                //   ),
-                // );
-              },
-            );
-          },
         ),
       ),
     );

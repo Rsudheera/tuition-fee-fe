@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../classes/classes_list_screen.dart';
+import '../payments/payments_dashboard.dart';
 import '../profile/profile_screen.dart';
 import '../students/students_list_screen.dart';
 
@@ -238,8 +239,19 @@ class PaymentsTab extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Payments'),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              // TODO: Implement search functionality
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Search payments')));
+            },
+          ),
+        ],
       ),
-      body: const Center(child: Text('Payments screen - To be implemented')),
+      body: const PaymentsDashboard(),
     );
   }
 }

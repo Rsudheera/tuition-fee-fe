@@ -10,8 +10,8 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _businessNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -24,8 +24,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _fullNameController.dispose();
+    _businessNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -42,8 +42,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       await _authRepository.register(
-        firstName: _firstNameController.text,
-        lastName: _lastNameController.text,
+        firstName: _fullNameController.text,
+        lastName: _businessNameController.text,
         email: _emailController.text,
         password: _passwordController.text,
         phone: _phoneController.text,
@@ -108,28 +108,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 32),
                       TextFormField(
-                        controller: _firstNameController,
+                        controller: _fullNameController,
                         decoration: const InputDecoration(
-                          labelText: 'First Name',
+                          labelText: 'Full Name',
                           prefixIcon: Icon(Icons.person),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your first name';
+                            return 'Please enter your full name';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
-                        controller: _lastNameController,
+                        controller: _businessNameController,
                         decoration: const InputDecoration(
-                          labelText: 'Last Name',
-                          prefixIcon: Icon(Icons.person_outline),
+                          labelText: 'Business Name',
+                          prefixIcon: Icon(Icons.business),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your last name';
+                            return 'Please enter your business name';
                           }
                           return null;
                         },

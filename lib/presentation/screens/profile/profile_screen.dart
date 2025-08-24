@@ -5,7 +5,7 @@ import '../../widgets/profile/education_qualification_widget.dart';
 class ProfileScreen extends StatefulWidget {
   final Teacher? teacher;
 
-  const ProfileScreen({Key? key, this.teacher}) : super(key: key);
+  const ProfileScreen({super.key, this.teacher});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();

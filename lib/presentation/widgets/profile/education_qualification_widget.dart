@@ -6,11 +6,11 @@ class EducationQualificationWidget extends StatefulWidget {
   final Function(List<String>) onQualificationsChanged;
 
   const EducationQualificationWidget({
-    Key? key,
+    super.key,
     required this.isEditing,
     required this.qualifications,
     required this.onQualificationsChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<EducationQualificationWidget> createState() =>

@@ -4,7 +4,8 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  static const String baseUrl = 'https://your-backend-url.com/api';
+  static const String baseUrl =
+      'http://10.0.2.2:3000'; // 10.0.2.2 points to host machine's localhost for Android emulator
   static const String apiVersion = 'v1';
 
   // Storage Keys

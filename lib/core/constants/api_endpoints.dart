@@ -7,7 +7,7 @@ class ApiEndpoints {
   static const String payments = '/payments';
 
   // Auth endpoints
-  static const String login = '$auth/login';
+  static const String login = '/teacher/login';
   static const String register = '$auth/register';
   static const String logout = '$auth/logout';
   static const String refreshToken = '$auth/refresh';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../data/repositories/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,18 +30,40 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // TODO: Implement login logic
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
+      final authRepository = AuthRepository();
+      final response = await authRepository.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
       if (mounted) {
+        // Show success message
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login successful')));
+
         // Navigate to dashboard
         Navigator.of(context).pushReplacementNamed('/dashboard');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${e.toString()}')),
-        );
+        String errorMessage = 'Login failed';
+
+        if (e.toString().contains('SocketException') ||
+            e.toString().contains('connection refused')) {
+          errorMessage =
+              'Cannot connect to the server. Please check if the server is running.';
+        } else if (e.toString().contains('401')) {
+          errorMessage = 'Invalid email or password';
+        } else if (e.toString().contains('timeout')) {
+          errorMessage = 'Connection timed out. Please try again.';
+        } else {
+          errorMessage = 'Login failed: ${e.toString()}';
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } finally {
       if (mounted) {

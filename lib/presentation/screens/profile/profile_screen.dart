@@ -99,41 +99,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        actions: [
-          IconButton(
-            icon: Icon(_isEditing ? Icons.close : Icons.edit),
-            onPressed: _toggleEditMode,
-          ),
-          if (_isEditing)
-            IconButton(icon: const Icon(Icons.check), onPressed: _saveProfile),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _buildProfileHeader(),
-                const SizedBox(height: 24),
-                _buildProfileDetails(),
-                if (_isEditing) ...[
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _saveProfile,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    child: const Text('Save Changes'),
-                  ),
-                ],
-              ],
+    // Check if we're in a tab (no app bar needed) or standalone
+    final bool isInTab = ModalRoute.of(context)?.settings.name != '/profile';
+
+    if (isInTab) {
+      // Inside the tab, don't need the app bar
+      return buildContent();
+    } else {
+      // Standalone profile page with app bar
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('My Profile'),
+          actions: [
+            IconButton(
+              icon: Icon(_isEditing ? Icons.close : Icons.edit),
+              onPressed: _toggleEditMode,
             ),
+            if (_isEditing)
+              IconButton(
+                icon: const Icon(Icons.check),
+                onPressed: _saveProfile,
+              ),
+          ],
+        ),
+        body: buildContent(),
+      );
+    }
+  }
+
+  Widget buildContent() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildProfileHeader(),
+              const SizedBox(height: 24),
+              _buildProfileDetails(),
+              if (_isEditing) ...[
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _saveProfile,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: const Text('Save Changes'),
+                ),
+              ],
+            ],
           ),
         ),
       ),

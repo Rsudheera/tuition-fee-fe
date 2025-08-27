@@ -3,6 +3,7 @@ import '../classes/classes_list_screen.dart';
 import '../payments/payments_dashboard.dart';
 import '../profile/profile_screen.dart';
 import '../students/students_list_screen.dart';
+import '../../widgets/common/app_drawer.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,6 +14,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Widget> _screens = [
     const DashboardHomeTab(),
@@ -22,29 +24,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const ProfileTab(),
   ];
 
+  void toggleDrawer() {
+    if (_scaffoldKey.currentState!.isDrawerOpen) {
+      _scaffoldKey.currentState!.closeDrawer();
+    } else {
+      _scaffoldKey.currentState!.openDrawer();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: (index) {
+      key: _scaffoldKey,
+      drawer: AppDrawer(
+        selectedIndex: _selectedIndex,
+        onItemSelected: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.class_), label: 'Classes'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Students'),
-          BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payments'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
       ),
+      body: _screens[_selectedIndex],
     );
   }
 }
@@ -57,7 +57,12 @@ class DashboardHomeTab extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -183,7 +188,6 @@ class DashboardHomeTab extends StatelessWidget {
   }
 }
 
-// Placeholder tabs
 class ClassesTab extends StatelessWidget {
   const ClassesTab({super.key});
 
@@ -192,7 +196,12 @@ class ClassesTab extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Classes'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -215,7 +224,12 @@ class StudentsTab extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Students'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -238,7 +252,12 @@ class PaymentsTab extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payments'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -261,8 +280,26 @@ class ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We're reusing the ProfileScreen but without the app bar
-    // since it's already in a tab with its own app bar
-    return const ProfileScreen();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              // Navigate to the full profile screen
+              Navigator.pushNamed(context, '/profile');
+            },
+          ),
+        ],
+      ),
+      body: const ProfileScreen(),
+    );
   }
 }

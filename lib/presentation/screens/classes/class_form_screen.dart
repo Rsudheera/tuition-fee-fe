@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/notification_utils.dart';
 import '../../../data/models/tuition_class.dart';
 import '../../../data/repositories/class_repository.dart';
 import 'package:uuid/uuid.dart';
@@ -120,16 +121,18 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
         // Create new class
         await _classRepository.createClass(tuitionClass);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Class created successfully')),
+          NotificationUtils.showSuccessNotification(
+            context,
+            'Class created successfully',
           );
         }
       } else {
         // Update existing class
         await _classRepository.updateClass(tuitionClass);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Class updated successfully')),
+          NotificationUtils.showSuccessNotification(
+            context,
+            'Class updated successfully',
           );
         }
       }
@@ -139,9 +142,10 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        NotificationUtils.showErrorNotification(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+          'Error: ${e.toString()}',
+        );
       }
     } finally {
       if (mounted) {

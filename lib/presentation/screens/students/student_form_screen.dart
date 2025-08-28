@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/notification_utils.dart';
 import '../../../data/models/student.dart';
 import '../../../core/utils/mock_class_data.dart';
 import '../../../data/models/tuition_class.dart';
@@ -99,22 +100,20 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
 
       // For demo purposes, we'll just show a success message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.student == null
-                  ? 'Student created successfully'
-                  : 'Student updated successfully',
-            ),
-          ),
+        NotificationUtils.showSuccessNotification(
+          context,
+          widget.student == null
+              ? 'Student created successfully'
+              : 'Student updated successfully',
         );
         Navigator.pop(context, true); // Return true to indicate success
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        NotificationUtils.showErrorNotification(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+          'Error: ${e.toString()}',
+        );
       }
     } finally {
       if (mounted) {

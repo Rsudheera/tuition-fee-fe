@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/notification_utils.dart';
 import '../../../data/repositories/auth_repository.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -50,18 +51,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful! Please login.'),
-          ),
+        NotificationUtils.showSuccessNotification(
+          context,
+          'Registration successful! Please login.',
         );
         // Navigate back to login
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: ${e.toString()}')),
+        NotificationUtils.showErrorNotification(
+          context,
+          'Registration failed: ${e.toString()}',
         );
       }
     } finally {

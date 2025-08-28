@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/notification_utils.dart';
 import '../../../data/repositories/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -38,9 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         // Show success message
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login successful')));
+        NotificationUtils.showSuccessNotification(context, 'Login successful');
 
         // Navigate to dashboard
         Navigator.of(context).pushReplacementNamed('/dashboard');
@@ -61,9 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
           errorMessage = 'Login failed: ${e.toString()}';
         }
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        NotificationUtils.showErrorNotification(context, errorMessage);
       }
     } finally {
       if (mounted) {

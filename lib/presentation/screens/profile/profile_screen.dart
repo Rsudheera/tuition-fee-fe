@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/notification_utils.dart';
 import '../../../data/models/teacher.dart';
 import '../../widgets/profile/education_qualification_widget.dart';
 
@@ -91,8 +92,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isEditing = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
+      NotificationUtils.showSuccessNotification(
+        context,
+        'Profile updated successfully',
       );
     }
   }

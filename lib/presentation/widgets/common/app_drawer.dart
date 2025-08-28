@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/themes/app_theme.dart';
+import '../../../core/utils/notification_utils.dart';
 
 class AppDrawer extends StatelessWidget {
   final int selectedIndex;
@@ -76,8 +77,9 @@ class AppDrawer extends StatelessWidget {
             title: 'Settings',
             onTap: () {
               // TODO: Navigate to settings
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings coming soon')),
+              NotificationUtils.showInfoNotification(
+                context,
+                'Settings coming soon',
               );
             },
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/notification_utils.dart';
 
 class BillsListScreen extends StatelessWidget {
   const BillsListScreen({super.key});
@@ -81,9 +82,7 @@ class BillsListScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Generate new bill
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Generate new bill')));
+          NotificationUtils.showInfoNotification(context, 'Generate new bill');
         },
         child: const Icon(Icons.add),
       ),

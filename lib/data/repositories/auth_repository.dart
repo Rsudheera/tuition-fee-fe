@@ -1,9 +1,11 @@
 import '../models/teacher.dart';
 import '../services/api_service.dart';
+import '../services/token_storage_service.dart';
 import '../../core/constants/api_endpoints.dart';
 
 class AuthRepository {
   final ApiService _apiService = ApiService();
+  final TokenStorageService _tokenStorageService = TokenStorageService();
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
@@ -12,8 +14,12 @@ class AuthRepository {
         'password': password,
       });
 
-      if (response['token'] != null) {
-        _apiService.setAuthToken(response['token']);
+      // New response format handling
+      if (response['success'] == true && response['data'] != null) {
+        if (response['data']['access_token'] != null) {
+          final token = response['data']['access_token'];
+          await _apiService.setAuthToken(token);
+        }
       }
 
       return response;
@@ -38,8 +44,12 @@ class AuthRepository {
         'phone': phone,
       });
 
-      if (response['token'] != null) {
-        _apiService.setAuthToken(response['token']);
+      // New response format handling
+      if (response['success'] == true && response['data'] != null) {
+        if (response['data']['access_token'] != null) {
+          final token = response['data']['access_token'];
+          await _apiService.setAuthToken(token);
+        }
       }
 
       return response;
@@ -54,7 +64,7 @@ class AuthRepository {
     } catch (e) {
       // Handle logout errors if needed
     } finally {
-      _apiService.clearAuthToken();
+      await _apiService.clearAuthToken();
     }
   }
 

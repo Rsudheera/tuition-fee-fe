@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../core/constants/app_constants.dart';
+import 'token_storage_service.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -8,18 +9,28 @@ class ApiService {
   ApiService._internal();
 
   final String baseUrl = AppConstants.baseUrl;
+  final TokenStorageService _tokenStorageService = TokenStorageService();
   String? _authToken;
 
-  void setAuthToken(String token) {
+  Future<void> setAuthToken(String token) async {
     _authToken = token;
+    // Store token securely using the token storage service
+    await _tokenStorageService.saveToken(token);
   }
 
-  void clearAuthToken() {
+  Future<void> clearAuthToken() async {
     _authToken = null;
+    // Remove token from secure storage
+    await _tokenStorageService.deleteToken();
   }
 
-  Map<String, String> get _headers {
+  Future<Map<String, String>> get _headers async {
     final headers = {'Content-Type': 'application/json'};
+
+    // If token is not in memory, try to load it from storage
+    if (_authToken == null) {
+      _authToken = await _tokenStorageService.getToken();
+    }
 
     if (_authToken != null) {
       headers['Authorization'] = 'Bearer $_authToken';
@@ -31,8 +42,9 @@ class ApiService {
   Future<Map<String, dynamic>> get(String endpoint) async {
     try {
       final url = Uri.parse('$baseUrl$endpoint');
+      final headers = await _headers;
       final response = await http
-          .get(url, headers: _headers)
+          .get(url, headers: headers)
           .timeout(Duration(milliseconds: AppConstants.connectionTimeout));
 
       return _handleResponse(response);
@@ -47,8 +59,9 @@ class ApiService {
   ) async {
     try {
       final url = Uri.parse('$baseUrl$endpoint');
+      final headers = await _headers;
       final response = await http
-          .post(url, headers: _headers, body: jsonEncode(data))
+          .post(url, headers: headers, body: jsonEncode(data))
           .timeout(Duration(milliseconds: AppConstants.connectionTimeout));
 
       return _handleResponse(response);
@@ -63,8 +76,9 @@ class ApiService {
   ) async {
     try {
       final url = Uri.parse('$baseUrl$endpoint');
+      final headers = await _headers;
       final response = await http
-          .put(url, headers: _headers, body: jsonEncode(data))
+          .put(url, headers: headers, body: jsonEncode(data))
           .timeout(Duration(milliseconds: AppConstants.connectionTimeout));
 
       return _handleResponse(response);
@@ -76,8 +90,9 @@ class ApiService {
   Future<Map<String, dynamic>> delete(String endpoint) async {
     try {
       final url = Uri.parse('$baseUrl$endpoint');
+      final headers = await _headers;
       final response = await http
-          .delete(url, headers: _headers)
+          .delete(url, headers: headers)
           .timeout(Duration(milliseconds: AppConstants.connectionTimeout));
 
       return _handleResponse(response);

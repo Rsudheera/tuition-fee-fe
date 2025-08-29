@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/notification_utils.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,11 +39,28 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (mounted) {
-        // Show success message
-        NotificationUtils.showSuccessNotification(context, 'Login successful');
+        if (response['success'] == true &&
+            response['data'] != null &&
+            response['data']['access_token'] != null) {
+          // Start token refresh cycle
+          final authService = AuthService();
+          authService.onLoginSuccess();
 
-        // Navigate to dashboard
-        Navigator.of(context).pushReplacementNamed('/dashboard');
+          // Show success message
+          NotificationUtils.showSuccessNotification(
+            context,
+            'Login successful',
+          );
+
+          // Navigate to dashboard
+          Navigator.of(context).pushReplacementNamed('/dashboard');
+        } else {
+          // Handle unexpected response format
+          NotificationUtils.showErrorNotification(
+            context,
+            'Login failed: Invalid response from server',
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

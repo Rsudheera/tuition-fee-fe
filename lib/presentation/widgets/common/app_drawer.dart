@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/themes/app_theme.dart';
 import '../../../core/utils/notification_utils.dart';
+import '../../../data/repositories/auth_repository.dart';
+import '../../../data/services/auth_service.dart';
 
 class AppDrawer extends StatelessWidget {
   final int selectedIndex;
@@ -88,9 +90,30 @@ class AppDrawer extends StatelessWidget {
             index: -2, // Special index for logout
             icon: Icons.logout,
             title: 'Logout',
-            onTap: () {
-              // Logout logic
-              Navigator.pushReplacementNamed(context, '/login');
+            onTap: () async {
+              try {
+                // Perform logout on server
+                final authRepository = AuthRepository();
+                await authRepository.logout();
+
+                // Stop token refresh
+                final authService = AuthService();
+                authService.onLogout();
+
+                // Show success message
+                NotificationUtils.showSuccessNotification(
+                  context,
+                  'Logged out successfully',
+                );
+
+                // Navigate to login screen
+                Navigator.pushReplacementNamed(context, '/login');
+              } catch (e) {
+                // Even if logout fails on server, clear local token and navigate to login
+                final authRepository = AuthRepository();
+                await authRepository.logout();
+                Navigator.pushReplacementNamed(context, '/login');
+              }
             },
           ),
         ],

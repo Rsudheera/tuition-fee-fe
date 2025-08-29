@@ -2,7 +2,7 @@ class ApiEndpoints {
   // Base endpoints
   static const String auth = '/auth';
   static const String teachers = '/teachers';
-  static const String classes = '/classes';
+  static const String classes = '/class';
   static const String students = '/students';
   static const String payments = '/payments';
 
@@ -18,6 +18,7 @@ class ApiEndpoints {
 
   // Class endpoints
   static const String createClass = '$classes/create';
+  static const String createClassDirect = classes;
   static const String getClasses = classes;
   static const String updateClass = '$classes/update';
   static const String deleteClass = '$classes/delete';

@@ -30,6 +30,41 @@ class ClassRepository {
     }
   }
 
+  Future<Map<String, dynamic>> createClassDirect({
+    required String name,
+    required String description,
+    required double monthlyFee,
+    required int paymentDueDay,
+    String? subject,
+    String? usualScheduledOn,
+  }) async {
+    try {
+      final Map<String, dynamic> requestBody = {
+        'name': name,
+        'description': description,
+        'monthlyFee': monthlyFee,
+        'paymentDueDay': paymentDueDay,
+      };
+
+      // Add optional fields if they exist
+      if (subject != null && subject.isNotEmpty) {
+        requestBody['subject'] = subject;
+      }
+
+      if (usualScheduledOn != null && usualScheduledOn.isNotEmpty) {
+        requestBody['usualScheduledOn'] = usualScheduledOn;
+      }
+
+      final response = await _apiService.post(
+        ApiEndpoints.createClassDirect,
+        requestBody,
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Failed to create class: $e');
+    }
+  }
+
   Future<TuitionClass> updateClass(TuitionClass tuitionClass) async {
     try {
       final response = await _apiService.put(

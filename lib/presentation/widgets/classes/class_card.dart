@@ -28,7 +28,7 @@ class ClassCard extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  tuitionClass.subject,
+                  tuitionClass.subject ?? 'General',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -53,12 +53,42 @@ class ClassCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (tuitionClass.description.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        tuitionClass.description,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                     const SizedBox(height: 3), // Reduced spacing
                     Text(
-                      tuitionClass.schedule,
+                      tuitionClass.usualScheduledOn ?? 'Schedule not set',
                       style: const TextStyle(fontSize: 13), // Smaller font
                       maxLines: 1, // Only show one line
                       overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3), // Reduced spacing
+                    Row(
+                      children: [
+                        const Icon(Icons.person, size: 12, color: Colors.grey),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            tuitionClass.teacherName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                     const Spacer(), // Push the row to the bottom
                     Row(
@@ -73,12 +103,12 @@ class ClassCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${tuitionClass.currentStudents}/${tuitionClass.maxStudents}',
-                          style: TextStyle(
+                          tuitionClass.paymentDueDay != null
+                              ? 'Due: Day ${tuitionClass.paymentDueDay}'
+                              : 'No due day set',
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: tuitionClass.hasAvailableSlots
-                                ? Colors.blue
-                                : Colors.red,
+                            color: Colors.blue,
                             fontSize: 13, // Smaller font
                           ),
                         ),
@@ -95,14 +125,14 @@ class ClassCard extends StatelessWidget {
                 vertical: 6,
               ), // Reduced padding
               decoration: BoxDecoration(
-                color: tuitionClass.isActive ? Colors.green : Colors.grey,
+                color: tuitionClass.status ? Colors.green : Colors.grey,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
               ),
               child: Text(
-                tuitionClass.isActive ? 'Active' : 'Inactive',
+                tuitionClass.status ? 'Active' : 'Inactive',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
@@ -117,7 +147,7 @@ class ClassCard extends StatelessWidget {
     );
   }
 
-  Color _getSubjectColor(String subject) {
+  Color _getSubjectColor(String? subject) {
     // Generate a consistent color based on the subject
     final List<Color> colors = [
       Colors.blue.shade700,
@@ -131,6 +161,10 @@ class ClassCard extends StatelessWidget {
     ];
 
     // Use subject's hash code to pick a color from the list
+    if (subject == null || subject.isEmpty) {
+      return Colors.blueGrey.shade700; // Default color for null/empty subject
+    }
+
     final int index = subject.hashCode.abs() % colors.length;
     return colors[index];
   }

@@ -22,6 +22,9 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _monthlyFeeController = TextEditingController();
+  final TextEditingController _paymentDueDayController = TextEditingController(
+    text: '15',
+  );
   final TextEditingController _scheduleController = TextEditingController();
   bool _isActive = true;
   bool _isLoading = false;
@@ -33,16 +36,19 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
     if (widget.tuitionClass != null) {
       // Editing mode - populate form with existing data
       _nameController.text = widget.tuitionClass!.name;
-      _subjectController.text = widget.tuitionClass!.subject;
+      _subjectController.text = widget.tuitionClass!.subject ?? '';
       _descriptionController.text = widget.tuitionClass!.description;
       _monthlyFeeController.text = widget.tuitionClass!.monthlyFee.toString();
-      _scheduleController.text = widget.tuitionClass!.schedule;
-      _isActive = widget.tuitionClass!.isActive;
+      _paymentDueDayController.text = (widget.tuitionClass!.paymentDueDay ?? 15)
+          .toString();
+      _scheduleController.text = widget.tuitionClass!.usualScheduledOn ?? '';
+      _isActive = widget.tuitionClass!.status;
     }
 
     // Add listeners that respond to any text changes
     _nameController.addListener(_validateForm);
     _monthlyFeeController.addListener(_validateForm);
+    _paymentDueDayController.addListener(_validateForm);
 
     // Initial validation
     _validateForm();
@@ -55,10 +61,17 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
         _monthlyFeeController.text.trim().isNotEmpty &&
         double.tryParse(_monthlyFeeController.text.trim()) != null;
 
+    final paymentDueDayText = _paymentDueDayController.text.trim();
+    final paymentDueDayValid =
+        paymentDueDayText.isNotEmpty &&
+        int.tryParse(paymentDueDayText) != null &&
+        int.parse(paymentDueDayText) >= 1 &&
+        int.parse(paymentDueDayText) <= 31;
+
     // Only update state if the validity has changed
-    if (_isFormValid != (nameValid && feeValid)) {
+    if (_isFormValid != (nameValid && feeValid && paymentDueDayValid)) {
       setState(() {
-        _isFormValid = nameValid && feeValid;
+        _isFormValid = nameValid && feeValid && paymentDueDayValid;
       });
     }
   }
@@ -70,6 +83,7 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
     _subjectController.dispose();
     _descriptionController.dispose();
     _monthlyFeeController.dispose();
+    _paymentDueDayController.dispose();
     _scheduleController.dispose();
     super.dispose();
   }
@@ -90,7 +104,8 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
           name: _nameController.text.trim(),
           description: _descriptionController.text.trim(),
           monthlyFee: double.parse(_monthlyFeeController.text.trim()),
-          paymentDueDay: 15, // Fixed value as per requirement
+          paymentDueDay:
+              int.tryParse(_paymentDueDayController.text.trim()) ?? 15,
           subject: _subjectController.text.trim(),
           usualScheduledOn: _scheduleController.text.trim(),
         );
@@ -114,8 +129,9 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
           subject: _subjectController.text.trim(),
           description: _descriptionController.text.trim(),
           monthlyFee: double.parse(_monthlyFeeController.text.trim()),
-          schedule: _scheduleController.text.trim(),
-          isActive: _isActive,
+          paymentDueDay: int.tryParse(_paymentDueDayController.text.trim()),
+          usualScheduledOn: _scheduleController.text.trim(),
+          status: _isActive,
           updatedAt: now,
         );
 
@@ -259,6 +275,35 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
                         }
                         if (double.tryParse(value) == null) {
                           return 'Please enter a valid amount';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _paymentDueDayController,
+                      decoration: InputDecoration(
+                        labelText: 'Payment Due Day *',
+                        hintText: '15',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: const Icon(Icons.date_range),
+                        helperText: 'Day of month when payment is due (1-31)',
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        _validateForm();
+                      },
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter the payment due day';
+                        }
+                        final dayValue = int.tryParse(value);
+                        if (dayValue == null) {
+                          return 'Please enter a valid number';
+                        }
+                        if (dayValue < 1 || dayValue > 31) {
+                          return 'Day must be between 1 and 31';
                         }
                         return null;
                       },

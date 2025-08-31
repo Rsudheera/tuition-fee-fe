@@ -8,9 +8,28 @@ class ClassRepository {
   Future<List<TuitionClass>> getClasses() async {
     try {
       final response = await _apiService.get(ApiEndpoints.getClasses);
-      final List<dynamic> classesJson = response['classes'] ?? [];
+      print('API Response: $response'); // For debugging
+
+      // Check different response structures
+      List<dynamic> classesJson = [];
+
+      if (response.containsKey('data') && response['data'] is List) {
+        // Format: {"success": true, "data": [class1, class2...]}
+        classesJson = List<dynamic>.from(response['data']);
+      } else if (response.containsKey('classes')) {
+        // Format: {"classes": [class1, class2...]}
+        classesJson = List<dynamic>.from(response['classes'] ?? []);
+      } else if (response.containsKey('data') &&
+          response['data'] is Map &&
+          response['data'].containsKey('classes')) {
+        // Format: {"data": {"classes": [class1, class2...]}}
+        classesJson = List<dynamic>.from(response['data']['classes'] ?? []);
+        // No need to check for direct list format as the API always returns a Map
+      }
+
       return classesJson.map((json) => TuitionClass.fromJson(json)).toList();
     } catch (e) {
+      print('Error fetching classes: $e');
       rethrow;
     }
   }

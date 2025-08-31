@@ -49,9 +49,11 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
         subject: '',
         description: '',
         monthlyFee: 0,
+        paymentDueDay: null, // Made null
+        usualScheduledOn: '',
+        status: false,
         teacherId: '',
         startDate: DateTime.now(),
-        schedule: '',
         maxStudents: 0,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),

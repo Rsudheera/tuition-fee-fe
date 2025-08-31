@@ -34,29 +34,78 @@ class _ClassesListScreenState extends State<ClassesListScreen> {
       // Try to get data from API first
       try {
         final classes = await _classRepository.getClasses();
-        setState(() {
-          _classes = classes;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _classes = classes;
+            _isLoading = false;
+          });
+        }
       } catch (apiError) {
         // If API fails, use mock data
         debugPrint('API error: $apiError, using mock data instead');
+
+        // Check if token is missing
+        if (apiError.toString().contains('401') ||
+            apiError.toString().contains('Unauthorized')) {
+          if (mounted) {
+            setState(() {
+              _error = 'Authentication error. Please log in again.';
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+
         final mockClasses = MockClassData.getMockClasses();
+        if (mounted) {
+          setState(() {
+            _classes = mockClasses;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _classes = mockClasses;
+          _error = 'Failed to load classes: ${e.toString()}';
           _isLoading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _error = 'Failed to load classes: ${e.toString()}';
-        _isLoading = false;
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Use Scaffold with AppBar that has a refresh button
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Classes'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchClasses,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
+      body: _buildBody(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ClassFormScreen()),
+          ).then((result) {
+            if (result == true) {
+              _fetchClasses();
+            }
+          });
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -108,53 +157,37 @@ class _ClassesListScreenState extends State<ClassesListScreen> {
       );
     }
 
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ClassFormScreen()),
-          ).then((result) {
-            if (result == true) {
-              _fetchClasses();
-            }
-          });
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _fetchClasses,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio:
-                  0.7, // Adjusted to give more height to each card
-            ),
-            itemCount: _classes.length,
-            itemBuilder: (context, index) {
-              final tuitionClass = _classes[index];
-              return ClassCard(
-                tuitionClass: tuitionClass,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ClassFormScreen(tuitionClass: tuitionClass),
-                    ),
-                  ).then((result) {
-                    if (result == true) {
-                      _fetchClasses();
-                    }
-                  });
-                },
-              );
-            },
+    return RefreshIndicator(
+      onRefresh: _fetchClasses,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.7, // Adjusted to give more height to each card
           ),
+          itemCount: _classes.length,
+          itemBuilder: (context, index) {
+            final tuitionClass = _classes[index];
+            return ClassCard(
+              tuitionClass: tuitionClass,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ClassFormScreen(tuitionClass: tuitionClass),
+                  ),
+                ).then((result) {
+                  if (result == true) {
+                    _fetchClasses();
+                  }
+                });
+              },
+            );
+          },
         ),
       ),
     );

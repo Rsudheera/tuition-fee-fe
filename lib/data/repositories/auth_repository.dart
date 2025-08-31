@@ -29,16 +29,16 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> register({
-    required String firstName,
-    required String lastName,
+    required String name,
+    required String businessName,
     required String email,
     required String password,
     required String phone,
   }) async {
     try {
       final response = await _apiService.post(ApiEndpoints.register, {
-        'firstName': firstName,
-        'lastName': lastName,
+        'name': name,
+        'businessName': businessName,
         'email': email,
         'password': password,
         'phone': phone,

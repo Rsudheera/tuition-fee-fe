@@ -43,8 +43,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       await _authRepository.register(
-        firstName: _fullNameController.text,
-        lastName: _businessNameController.text,
+        name: _fullNameController.text,
+        businessName: _businessNameController.text,
         email: _emailController.text,
         password: _passwordController.text,
         phone: _phoneController.text,

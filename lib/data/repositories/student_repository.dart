@@ -1,0 +1,97 @@
+import '../models/student.dart';
+import '../services/api_service.dart';
+import '../../core/constants/api_endpoints.dart';
+
+class StudentRepository {
+  final ApiService _apiService = ApiService();
+
+  Future<List<Student>> getStudents() async {
+    try {
+      final response = await _apiService.get(ApiEndpoints.getStudents);
+      print('API Response for students: $response'); // For debugging
+
+      // Handle different potential response formats
+      List<dynamic> studentsJson = [];
+
+      if (response.containsKey('data')) {
+        if (response['data'] is List) {
+          // Format: {"success": true, "data": [student1, student2...]}
+          studentsJson = List<dynamic>.from(response['data']);
+        } else if (response['data'] is Map) {
+          if (response['data'].containsKey('students') &&
+              response['data']['students'] is List) {
+            // Format: {"data": {"students": [student1, student2...]}}
+            studentsJson = List<dynamic>.from(
+              response['data']['students'] ?? [],
+            );
+          } else {
+            // Format: {"success": true, "data": {student_details}} - Single student
+            // Create a one-element list with the single student
+            studentsJson = [response];
+          }
+        }
+      } else if (response.containsKey('students')) {
+        // Format: {"students": [student1, student2...]}
+        studentsJson = List<dynamic>.from(response['students'] ?? []);
+      } else {
+        // If nothing matches, assume the response itself might contain valid data
+        print('Response format not recognized, attempting to use raw data');
+        studentsJson = [];
+      }
+
+      return studentsJson.map((json) => Student.fromJson(json)).toList();
+    } catch (e) {
+      print('Error fetching students: $e');
+      rethrow;
+    }
+  }
+
+  Future<Student> createStudent(Student student) async {
+    try {
+      final response = await _apiService.post(
+        ApiEndpoints.createStudent,
+        student.toJson(),
+      );
+      return Student.fromJson(response['student']);
+    } catch (e) {
+      print('API error during student creation: $e');
+      rethrow;
+    }
+  }
+
+  Future<Student> updateStudent(Student student) async {
+    try {
+      final response = await _apiService.put(
+        '${ApiEndpoints.updateStudent}/${student.id}',
+        student.toJson(),
+      );
+      return Student.fromJson(response['student']);
+    } catch (e) {
+      print('API error during student update: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> deleteStudent(String id) async {
+    try {
+      await _apiService.delete('${ApiEndpoints.deleteStudent}/$id');
+      return true;
+    } catch (e) {
+      print('API error during student deletion: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> toggleStudentStatus(String id, bool isActive) async {
+    try {
+      final response = await _apiService.put(
+        '${ApiEndpoints.updateStudent}/$id/status',
+        {'isActive': isActive},
+      );
+      return response['success'] ?? false;
+    } catch (e) {
+      print('API error during student status update: $e');
+      rethrow;
+    }
+  }
+}

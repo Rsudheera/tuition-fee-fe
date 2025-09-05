@@ -35,14 +35,21 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
 
     if (widget.student != null) {
       // Editing mode - populate form with existing data
-      _firstNameController.text = widget.student!.firstName;
-      _lastNameController.text = widget.student!.lastName;
+      // Split the fullName into firstName and lastName
+      final nameParts = widget.student!.fullName.split(' ');
+      _firstNameController.text = nameParts.isNotEmpty ? nameParts[0] : '';
+      _lastNameController.text = nameParts.length > 1
+          ? nameParts.sublist(1).join(' ')
+          : '';
 
-      // Age isn't directly stored in the model, so we'd need a way to calculate or store it
+      // Set age if available
+      if (widget.student!.age != null) {
+        _ageController.text = widget.student!.age.toString();
+      }
 
-      _parentContactController.text = widget.student!.parentPhone ?? '';
-
-      // Parent name isn't in the model yet, but we're adding it to the form
+      // Set parent name and contact if available
+      _parentNameController.text = widget.student!.parentName ?? '';
+      _parentContactController.text = widget.student!.parentContactNumber ?? '';
 
       if (widget.student!.classIds.isNotEmpty) {
         _selectedClassId = widget.student!.classIds.first;
@@ -75,24 +82,55 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
     });
 
     try {
-      // In a real app, you would save/update the student to a repository
+      // Construct the fullName from firstName and lastName
+      final fullName =
+          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}';
+      // Get age as integer
+      final age = int.tryParse(_ageController.text.trim());
+
+      // Prepare classIds list
+      final classIds = <String>[];
+      if (_selectedClassId != null && _selectedClassId!.isNotEmpty) {
+        classIds.add(_selectedClassId!);
+      }
 
       if (widget.student == null) {
         // Create new student
-        debugPrint(
-          'Creating new student: ${_firstNameController.text} ${_lastNameController.text}',
-        );
+        debugPrint('Creating new student: $fullName');
         debugPrint('Class selected: ${_selectedClassId ?? "None"}');
-        debugPrint('Age: ${_ageController.text}');
+        debugPrint('Age: $age');
         debugPrint('Parent Name: ${_parentNameController.text}');
         debugPrint('Parent Contact: ${_parentContactController.text}');
+
+        // In a real app, you would call the repository to create the student
+        // final newStudent = Student(
+        //   id: '',  // The API will assign an ID
+        //   fullName: fullName,
+        //   age: age,
+        //   parentName: _parentNameController.text.trim(),
+        //   parentContactNumber: _parentContactController.text.trim(),
+        //   isActive: true,
+        //   classIds: classIds,
+        //   createdAt: DateTime.now(),
+        //   updatedAt: DateTime.now(),
+        // );
+        // await _studentRepository.createStudent(newStudent);
       } else {
         // Update existing student
-        debugPrint(
-          'Updating student: ${_firstNameController.text} ${_lastNameController.text}',
-        );
+        debugPrint('Updating student: $fullName');
         debugPrint('Class selected: ${_selectedClassId ?? "None"}');
         debugPrint('Parent Contact: ${_parentContactController.text}');
+
+        // In a real app, you would call the repository to update the student
+        // final updatedStudent = widget.student!.copyWith(
+        //   fullName: fullName,
+        //   age: age,
+        //   parentName: _parentNameController.text.trim(),
+        //   parentContactNumber: _parentContactController.text.trim(),
+        //   classIds: classIds,
+        //   updatedAt: DateTime.now(),
+        // );
+        // await _studentRepository.updateStudent(updatedStudent);
       }
 
       // In a real app, you would save this to a repository

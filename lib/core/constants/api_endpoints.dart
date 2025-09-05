@@ -3,7 +3,7 @@ class ApiEndpoints {
   static const String auth = '/auth';
   static const String teachers = '/teachers';
   static const String classes = '/class';
-  static const String students = '/students';
+  static const String students = '/student';
   static const String payments = '/payments';
 
   // Auth endpoints
@@ -24,7 +24,7 @@ class ApiEndpoints {
   static const String deleteClass = '$classes/delete';
 
   // Student endpoints
-  static const String createStudent = '$students/create';
+  static const String createStudent = students;
   static const String getStudents = students;
   static const String updateStudent = '$students/update';
   static const String deleteStudent = '$students/delete';

@@ -77,9 +77,21 @@ class CustomButton extends StatelessWidget {
       height: height,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: textColor,
+        style: ButtonStyle(
+          backgroundColor: backgroundColor != null
+              ? MaterialStateProperty.resolveWith<Color>((states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return Colors.grey.shade400;
+                  }
+                  return backgroundColor!;
+                })
+              : null,
+          foregroundColor: textColor != null
+              ? MaterialStateProperty.all<Color>(textColor!)
+              : null,
+          padding: MaterialStateProperty.all<EdgeInsets>(
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          ),
         ),
         child: isLoading
             ? const SizedBox(
@@ -89,6 +101,7 @@ class CustomButton extends StatelessWidget {
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[Icon(icon), const SizedBox(width: 8)],
                   Text(text),

@@ -27,6 +27,7 @@ class TuitionFeeApp extends StatelessWidget {
     return MaterialApp(
       title: 'Tuition Fee Manager',
       theme: AppTheme.lightTheme,
+      themeMode: ThemeMode.light,
       initialRoute: isAuthenticated ? '/dashboard' : '/login',
       routes: {
         '/login': (context) => const LoginScreen(),

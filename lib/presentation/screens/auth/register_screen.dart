@@ -20,11 +20,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isFormValid = false;
 
   final AuthRepository _authRepository = AuthRepository();
 
   @override
+  void initState() {
+    super.initState();
+    _fullNameController.addListener(_validateRequiredFields);
+    _emailController.addListener(_validateRequiredFields);
+    _passwordController.addListener(_validateRequiredFields);
+    _confirmPasswordController.addListener(_validateRequiredFields);
+  }
+
+  @override
   void dispose() {
+    _fullNameController.removeListener(_validateRequiredFields);
+    _emailController.removeListener(_validateRequiredFields);
+    _passwordController.removeListener(_validateRequiredFields);
+    _confirmPasswordController.removeListener(_validateRequiredFields);
     _fullNameController.dispose();
     _businessNameController.dispose();
     _emailController.dispose();
@@ -34,8 +48,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  void _validateRequiredFields() {
+    final fullNameValid = _fullNameController.text.isNotEmpty;
+    final emailValid =
+        _emailController.text.isNotEmpty &&
+        RegExp(
+          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+        ).hasMatch(_emailController.text);
+    final passwordValid =
+        _passwordController.text.isNotEmpty &&
+        _passwordController.text.length >= 6;
+    final confirmPasswordValid =
+        _confirmPasswordController.text.isNotEmpty &&
+        _confirmPasswordController.text == _passwordController.text;
+
+    setState(() {
+      _isFormValid =
+          fullNameValid && emailValid && passwordValid && confirmPasswordValid;
+    });
+  }
+
   Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
+    // Check if the required fields are valid
+    if (!_isFormValid || !_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
@@ -44,10 +79,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await _authRepository.register(
         name: _fullNameController.text,
-        businessName: _businessNameController.text,
+        businessName: _businessNameController.text.isEmpty
+            ? _fullNameController.text
+            : _businessNameController.text,
         email: _emailController.text,
         password: _passwordController.text,
-        phone: _phoneController.text,
+        phone: _phoneController.text.isEmpty ? "" : _phoneController.text,
       );
 
       if (mounted) {
@@ -111,7 +148,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _fullNameController,
                         decoration: const InputDecoration(
-                          labelText: 'Full Name',
+                          labelText: 'Full Name *',
                           prefixIcon: Icon(Icons.person),
                         ),
                         validator: (value) {
@@ -128,10 +165,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           labelText: 'Business Name',
                           prefixIcon: Icon(Icons.business),
                         ),
+                        // Business name is optional
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your business name';
-                          }
                           return null;
                         },
                       ),
@@ -140,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
-                          labelText: 'Email',
+                          labelText: 'Email *',
                           prefixIcon: Icon(Icons.email),
                         ),
                         validator: (value) {
@@ -160,7 +195,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: 'Password',
+                          labelText: 'Password *',
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -190,7 +225,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirmPassword,
                         decoration: InputDecoration(
-                          labelText: 'Confirm Password',
+                          labelText: 'Confirm Password *',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -225,28 +260,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           prefixIcon: Icon(Icons.phone),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your phone number';
-                          }
-                          // Simple phone validation - can be enhanced as needed
-                          if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)) {
-                            return 'Please enter a valid phone number';
+                          // Phone is optional, but if provided, validate it
+                          if (value != null && value.isNotEmpty) {
+                            if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)) {
+                              return 'Please enter a valid phone number';
+                            }
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _isLoading ? null : _handleRegister,
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: (_isLoading || !_isFormValid)
+                              ? null
+                              : _handleRegister,
+                          style: ButtonStyle(
+                            padding: MaterialStateProperty.all<EdgeInsets>(
+                              const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white70,
+                                  ),
+                                )
+                              : const Text(
+                                  'Register',
+                                  style: TextStyle(fontSize: 16),
                                 ),
-                              )
-                            : const Text('Register'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '* Required fields',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 16),
                       TextButton(

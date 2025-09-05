@@ -366,9 +366,9 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 16.0,
+                            style: ButtonStyle(
+                              padding: MaterialStateProperty.all<EdgeInsets>(
+                                const EdgeInsets.symmetric(vertical: 16.0),
                               ),
                             ),
                             child: const Text(
@@ -382,17 +382,10 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
                           child: ElevatedButton(
                             // Disable button if form is invalid
                             onPressed: _isFormValid ? _saveClass : null,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 16.0,
+                            style: ButtonStyle(
+                              padding: MaterialStateProperty.all<EdgeInsets>(
+                                const EdgeInsets.symmetric(vertical: 16.0),
                               ),
-                              backgroundColor: _isFormValid
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey[400],
-                              foregroundColor: Colors.white,
-                              // Reduce opacity when disabled
-                              disabledBackgroundColor: Colors.grey[400],
-                              disabledForegroundColor: Colors.white70,
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,

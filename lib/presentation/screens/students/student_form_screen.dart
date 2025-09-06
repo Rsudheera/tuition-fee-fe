@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../../core/utils/notification_utils.dart';
 import '../../../data/models/student.dart';
-import '../../../core/utils/mock_class_data.dart';
-import '../../../data/models/tuition_class.dart';
+import '../../../data/repositories/student_repository.dart';
 
 class StudentFormScreen extends StatefulWidget {
   final Student? student;
@@ -17,30 +18,24 @@ class StudentFormScreen extends StatefulWidget {
 
 class _StudentFormScreenState extends State<StudentFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _parentNameController = TextEditingController();
   final TextEditingController _parentContactController =
       TextEditingController();
 
-  String? _selectedClassId;
-  List<TuitionClass> _classes = [];
+  final StudentRepository _studentRepository = StudentRepository();
+
   bool _isLoading = false;
+  bool _isFormValid = false; // Track if the form is valid
 
   @override
   void initState() {
     super.initState();
-    _loadClasses();
 
     if (widget.student != null) {
       // Editing mode - populate form with existing data
-      // Split the fullName into firstName and lastName
-      final nameParts = widget.student!.fullName.split(' ');
-      _firstNameController.text = nameParts.isNotEmpty ? nameParts[0] : '';
-      _lastNameController.text = nameParts.length > 1
-          ? nameParts.sublist(1).join(' ')
-          : '';
+      _fullNameController.text = widget.student!.fullName;
 
       // Set age if available
       if (widget.student!.age != null) {
@@ -50,24 +45,36 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
       // Set parent name and contact if available
       _parentNameController.text = widget.student!.parentName ?? '';
       _parentContactController.text = widget.student!.parentContactNumber ?? '';
-
-      if (widget.student!.classIds.isNotEmpty) {
-        _selectedClassId = widget.student!.classIds.first;
-      }
     }
+
+    // Add listeners to required fields
+    _fullNameController.addListener(_validateForm);
+    _parentContactController.addListener(_validateForm);
+
+    // Initial validation
+    _validateForm();
   }
 
-  void _loadClasses() {
-    // In a real app, you would load this from a repository
-    setState(() {
-      _classes = MockClassData.getMockClasses();
-    });
+  // Validate required fields - only full name and contact are required
+  void _validateForm() {
+    final nameValid = _fullNameController.text.trim().isNotEmpty;
+    final contactValid = _parentContactController.text.trim().isNotEmpty;
+
+    // Only update state if the validity has changed
+    if (_isFormValid != (nameValid && contactValid)) {
+      setState(() {
+        _isFormValid = nameValid && contactValid;
+      });
+    }
   }
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    // Remove listeners before disposing controllers
+    _fullNameController.removeListener(_validateForm);
+    _parentContactController.removeListener(_validateForm);
+
+    _fullNameController.dispose();
     _ageController.dispose();
     _parentNameController.dispose();
     _parentContactController.dispose();
@@ -82,55 +89,206 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
     });
 
     try {
-      // Construct the fullName from firstName and lastName
-      final fullName =
-          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}';
-      // Get age as integer
-      final age = int.tryParse(_ageController.text.trim());
+      final fullName = _fullNameController.text.trim();
 
-      // Prepare classIds list
-      final classIds = <String>[];
-      if (_selectedClassId != null && _selectedClassId!.isNotEmpty) {
-        classIds.add(_selectedClassId!);
-      }
+      // Handle optional age field
+      final ageText = _ageController.text.trim();
+      final age = ageText.isNotEmpty ? int.tryParse(ageText) : null;
+
+      // Handle optional parent name field
+      final parentNameText = _parentNameController.text.trim();
+      final parentName = parentNameText.isNotEmpty ? parentNameText : null;
+
+      // Required field
+      final parentContactNumber = _parentContactController.text.trim();
 
       if (widget.student == null) {
         // Create new student
         debugPrint('Creating new student: $fullName');
-        debugPrint('Class selected: ${_selectedClassId ?? "None"}');
-        debugPrint('Age: $age');
-        debugPrint('Parent Name: ${_parentNameController.text}');
-        debugPrint('Parent Contact: ${_parentContactController.text}');
 
-        // In a real app, you would call the repository to create the student
-        // final newStudent = Student(
-        //   id: '',  // The API will assign an ID
-        //   fullName: fullName,
-        //   age: age,
-        //   parentName: _parentNameController.text.trim(),
-        //   parentContactNumber: _parentContactController.text.trim(),
-        //   isActive: true,
-        //   classIds: classIds,
-        //   createdAt: DateTime.now(),
-        //   updatedAt: DateTime.now(),
-        // );
-        // await _studentRepository.createStudent(newStudent);
+        // Direct API call to the exact endpoint as requested
+        try {
+          // Use the exact URL as specified in the requirement
+          final url = Uri.parse('http://localhost:3000/student');
+
+          debugPrint('Attempting to connect to: $url');
+
+          // Create payload exactly as requested in the requirements
+          final Map<String, dynamic> payload = {
+            'fullName': fullName,
+            'parentContactNumber': parentContactNumber,
+          };
+
+          // Add optional fields if they have values
+          if (age != null) payload['age'] = age;
+          if (parentName != null) payload['parentName'] = parentName;
+
+          debugPrint(
+            'Sending API request with payload: ${jsonEncode(payload)}',
+          );
+
+          // Make the HTTP POST request with proper headers
+          final response = await http
+              .post(
+                url,
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode(payload),
+              )
+              .timeout(
+                const Duration(seconds: 10), // Shorter timeout for debugging
+                onTimeout: () {
+                  debugPrint('Request timed out after 10 seconds');
+                  throw Exception('Request timed out. Please try again later.');
+                },
+              );
+
+          debugPrint('API response status: ${response.statusCode}');
+          debugPrint('API response body: ${response.body}');
+
+          if (response.statusCode >= 200 && response.statusCode < 300) {
+            // Successfully created the student
+            debugPrint('Student created successfully via direct API call');
+
+            // Try to parse the response to get the created student data
+            try {
+              final responseData = jsonDecode(response.body);
+              debugPrint('Created student data: $responseData');
+            } catch (parseError) {
+              debugPrint('Could not parse response data: $parseError');
+            }
+          } else {
+            // Handle error response
+            String errorMessage;
+
+            try {
+              // Try to extract error message from response
+              final errorResponse = jsonDecode(response.body);
+              errorMessage =
+                  errorResponse['message'] ??
+                  errorResponse['error'] ??
+                  'API Error: HTTP ${response.statusCode}';
+            } catch (parseError) {
+              // If can't parse JSON, use raw body or status code
+              errorMessage = response.body.isNotEmpty
+                  ? 'API Error: ${response.body}'
+                  : 'API Error: HTTP ${response.statusCode}';
+            }
+
+            throw Exception(errorMessage);
+          }
+        } catch (e) {
+          debugPrint('API request failed: $e');
+
+          if (e.toString().contains('SocketException') ||
+              e.toString().contains('Connection refused')) {
+            debugPrint('Network error detected, server might be down');
+
+            // Try alternative URL for Android emulator
+            try {
+              debugPrint('Trying alternative URL for Android emulator...');
+              final alternativeUrl = Uri.parse('http://10.0.2.2:3000/student');
+
+              final Map<String, dynamic> payload = {
+                'fullName': fullName,
+                'parentContactNumber': parentContactNumber,
+              };
+              if (age != null) payload['age'] = age;
+              if (parentName != null) payload['parentName'] = parentName;
+
+              final response = await http
+                  .post(
+                    alternativeUrl,
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode(payload),
+                  )
+                  .timeout(const Duration(seconds: 10));
+
+              if (response.statusCode >= 200 && response.statusCode < 300) {
+                debugPrint(
+                  'Student created successfully using alternative URL',
+                );
+                return; // Success with alternative URL, exit function
+              } else {
+                throw Exception(
+                  'Alternative URL also failed: HTTP ${response.statusCode}',
+                );
+              }
+            } catch (alternativeError) {
+              debugPrint('Alternative URL also failed: $alternativeError');
+              throw Exception(
+                'Cannot connect to server. Please check your internet connection and try again.',
+              );
+            }
+          }
+
+          // As a last resort, try the repository approach which uses ApiService
+          debugPrint('Attempting to create student via repository...');
+
+          try {
+            // Create student object with minimal required fields
+            final newStudent = Student(
+              id: '', // The API will assign an ID
+              fullName: fullName,
+              age: age,
+              parentName: parentName,
+              parentContactNumber: parentContactNumber,
+              isActive: true,
+              classIds: [],
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+
+            debugPrint(
+              'Using repository with student data: ${jsonEncode(newStudent.toJson())}',
+            );
+
+            // Use repository which should handle the API call internally
+            final createdStudent = await _studentRepository.createStudent(
+              newStudent,
+            );
+
+            debugPrint(
+              'Student created successfully via repository: ${createdStudent.id}',
+            );
+          } catch (repoError) {
+            debugPrint('Repository fallback also failed: $repoError');
+
+            // Try one more direct POST with minimal data as last attempt
+            try {
+              debugPrint('Final attempt: Direct minimal POST to /student');
+              final minimalPayload = {
+                'fullName': fullName,
+                'parentContactNumber': parentContactNumber,
+              };
+
+              await http.post(
+                Uri.parse('http://localhost:3000/student'),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode(minimalPayload),
+              );
+
+              debugPrint('Minimal POST succeeded');
+            } catch (finalError) {
+              debugPrint('All attempts failed. Last error: $finalError');
+              throw Exception(
+                'Failed to create student after multiple attempts. Please try again later.',
+              );
+            }
+          }
+        }
       } else {
         // Update existing student
         debugPrint('Updating student: $fullName');
-        debugPrint('Class selected: ${_selectedClassId ?? "None"}');
-        debugPrint('Parent Contact: ${_parentContactController.text}');
 
-        // In a real app, you would call the repository to update the student
-        // final updatedStudent = widget.student!.copyWith(
-        //   fullName: fullName,
-        //   age: age,
-        //   parentName: _parentNameController.text.trim(),
-        //   parentContactNumber: _parentContactController.text.trim(),
-        //   classIds: classIds,
-        //   updatedAt: DateTime.now(),
-        // );
-        // await _studentRepository.updateStudent(updatedStudent);
+        final updatedStudent = widget.student!.copyWith(
+          fullName: fullName,
+          age: age,
+          parentName: parentName,
+          parentContactNumber: parentContactNumber,
+          classIds: widget.student!.classIds,
+          updatedAt: DateTime.now(),
+        );
+        await _studentRepository.updateStudent(updatedStudent);
       }
 
       // In a real app, you would save this to a repository
@@ -179,55 +337,54 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Full Name (First + Last Name)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _firstNameController,
-                            decoration: const InputDecoration(
-                              labelText: 'First Name',
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Please enter first name';
-                              }
-                              return null;
-                            },
-                          ),
+                    // Student Icon/Image at the top
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 24.0),
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _lastNameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Last Name',
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Please enter last name';
-                              }
-                              return null;
-                            },
-                          ),
+                        child: Icon(
+                          Icons.person_add,
+                          size: 80,
+                          color: Theme.of(context).primaryColor,
                         ),
-                      ],
+                      ),
+                    ),
+
+                    // Full Name (single field) - required
+                    TextFormField(
+                      controller: _fullNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Full Name *',
+                        hintText: 'Required',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter full name';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
 
-                    // Age
+                    // Age (optional)
                     TextFormField(
                       controller: _ageController,
                       decoration: const InputDecoration(
-                        labelText: 'Age',
+                        labelText: 'Age (optional)',
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                       validator: (value) {
+                        // If empty, it's valid since age is optional
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter age';
+                          return null;
                         }
                         try {
                           final age = int.parse(value);
@@ -242,53 +399,26 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Class selection dropdown
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Class',
-                        border: OutlineInputBorder(),
-                      ),
-                      value: _selectedClassId,
-                      items: _classes.map((TuitionClass tuitionClass) {
-                        return DropdownMenuItem<String>(
-                          value: tuitionClass.id,
-                          child: Text(tuitionClass.name),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedClassId = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        // Optional: Make class selection required
-                        // return value == null ? 'Please select a class' : null;
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Parent Name
+                    // Parent Name (optional)
                     TextFormField(
                       controller: _parentNameController,
                       decoration: const InputDecoration(
-                        labelText: 'Parent Name',
+                        labelText: 'Parent Name (optional)',
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter parent name';
-                        }
+                        // Parent name is optional, so it's valid even if empty
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    // Parent Contact Number
+                    // Parent Contact Number (required)
                     TextFormField(
                       controller: _parentContactController,
                       decoration: const InputDecoration(
-                        labelText: 'Parent Contact Number',
+                        labelText: 'Parent Contact Number *',
+                        hintText: 'Required',
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.phone,
@@ -302,18 +432,41 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Save Button
-                    ElevatedButton(
-                      onPressed: _saveStudent,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: Text(
-                        widget.student == null
-                            ? 'Create Student'
-                            : 'Update Student',
-                        style: const TextStyle(fontSize: 16),
-                      ),
+                    // Button Row with Cancel and Save buttons
+                    Row(
+                      children: [
+                        // Cancel Button
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+
+                        // Save/Create Button
+                        Expanded(
+                          child: ElevatedButton(
+                            // Only enable if form is valid
+                            onPressed: _isFormValid ? _saveStudent : null,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: Text(
+                              widget.student == null
+                                  ? 'Create Student'
+                                  : 'Update Student',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../attendance/attendance_screen.dart';
 import '../classes/classes_list_screen.dart';
 import '../payments/payments_dashboard.dart';
+import '../performance/student_performance_screen.dart';
 import '../profile/profile_screen.dart';
 import '../students/students_list_screen.dart';
 import '../../widgets/common/app_drawer.dart';
@@ -21,6 +23,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const ClassesTab(),
     const StudentsTab(),
     const PaymentsTab(),
+    const AttendanceTab(),
+    const StudentPerformanceTab(),
     const ProfileTab(),
   ];
 
@@ -301,5 +305,23 @@ class ProfileTab extends StatelessWidget {
       ),
       body: const ProfileScreen(),
     );
+  }
+}
+
+class AttendanceTab extends StatelessWidget {
+  const AttendanceTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AttendanceScreen();
+  }
+}
+
+class StudentPerformanceTab extends StatelessWidget {
+  const StudentPerformanceTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const StudentPerformanceScreen();
   }
 }

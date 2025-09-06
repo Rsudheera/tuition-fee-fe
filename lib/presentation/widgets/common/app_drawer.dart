@@ -68,6 +68,18 @@ class AppDrawer extends StatelessWidget {
           _buildDrawerItem(
             context,
             index: 4,
+            icon: Icons.event_available,
+            title: 'Attendance',
+          ),
+          _buildDrawerItem(
+            context,
+            index: 5,
+            icon: Icons.assessment,
+            title: 'Student Performance',
+          ),
+          _buildDrawerItem(
+            context,
+            index: 6,
             icon: Icons.person,
             title: 'Profile',
           ),

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../../../core/utils/notification_utils.dart';
 import '../../../data/models/student.dart';
 import '../../../data/repositories/student_repository.dart';
@@ -106,175 +104,19 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
         // Create new student
         debugPrint('Creating new student: $fullName');
 
-        // Direct API call to the exact endpoint as requested
         try {
-          // Use the exact URL as specified in the requirement
-          final url = Uri.parse('http://localhost:3000/student');
-
-          debugPrint('Attempting to connect to: $url');
-
-          // Create payload exactly as requested in the requirements
-          final Map<String, dynamic> payload = {
-            'fullName': fullName,
-            'parentContactNumber': parentContactNumber,
-          };
-
-          // Add optional fields if they have values
-          if (age != null) payload['age'] = age;
-          if (parentName != null) payload['parentName'] = parentName;
-
-          debugPrint(
-            'Sending API request with payload: ${jsonEncode(payload)}',
+          // Use the repository's direct create method (similar to class form)
+          await _studentRepository.createStudentDirect(
+            fullName: fullName,
+            parentContactNumber: parentContactNumber,
+            age: age,
+            parentName: parentName,
           );
 
-          // Make the HTTP POST request with proper headers
-          final response = await http
-              .post(
-                url,
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode(payload),
-              )
-              .timeout(
-                const Duration(seconds: 10), // Shorter timeout for debugging
-                onTimeout: () {
-                  debugPrint('Request timed out after 10 seconds');
-                  throw Exception('Request timed out. Please try again later.');
-                },
-              );
-
-          debugPrint('API response status: ${response.statusCode}');
-          debugPrint('API response body: ${response.body}');
-
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            // Successfully created the student
-            debugPrint('Student created successfully via direct API call');
-
-            // Try to parse the response to get the created student data
-            try {
-              final responseData = jsonDecode(response.body);
-              debugPrint('Created student data: $responseData');
-            } catch (parseError) {
-              debugPrint('Could not parse response data: $parseError');
-            }
-          } else {
-            // Handle error response
-            String errorMessage;
-
-            try {
-              // Try to extract error message from response
-              final errorResponse = jsonDecode(response.body);
-              errorMessage =
-                  errorResponse['message'] ??
-                  errorResponse['error'] ??
-                  'API Error: HTTP ${response.statusCode}';
-            } catch (parseError) {
-              // If can't parse JSON, use raw body or status code
-              errorMessage = response.body.isNotEmpty
-                  ? 'API Error: ${response.body}'
-                  : 'API Error: HTTP ${response.statusCode}';
-            }
-
-            throw Exception(errorMessage);
-          }
+          debugPrint('Student created successfully via repository');
         } catch (e) {
-          debugPrint('API request failed: $e');
-
-          if (e.toString().contains('SocketException') ||
-              e.toString().contains('Connection refused')) {
-            debugPrint('Network error detected, server might be down');
-
-            // Try alternative URL for Android emulator
-            try {
-              debugPrint('Trying alternative URL for Android emulator...');
-              final alternativeUrl = Uri.parse('http://10.0.2.2:3000/student');
-
-              final Map<String, dynamic> payload = {
-                'fullName': fullName,
-                'parentContactNumber': parentContactNumber,
-              };
-              if (age != null) payload['age'] = age;
-              if (parentName != null) payload['parentName'] = parentName;
-
-              final response = await http
-                  .post(
-                    alternativeUrl,
-                    headers: {'Content-Type': 'application/json'},
-                    body: jsonEncode(payload),
-                  )
-                  .timeout(const Duration(seconds: 10));
-
-              if (response.statusCode >= 200 && response.statusCode < 300) {
-                debugPrint(
-                  'Student created successfully using alternative URL',
-                );
-                return; // Success with alternative URL, exit function
-              } else {
-                throw Exception(
-                  'Alternative URL also failed: HTTP ${response.statusCode}',
-                );
-              }
-            } catch (alternativeError) {
-              debugPrint('Alternative URL also failed: $alternativeError');
-              throw Exception(
-                'Cannot connect to server. Please check your internet connection and try again.',
-              );
-            }
-          }
-
-          // As a last resort, try the repository approach which uses ApiService
-          debugPrint('Attempting to create student via repository...');
-
-          try {
-            // Create student object with minimal required fields
-            final newStudent = Student(
-              id: '', // The API will assign an ID
-              fullName: fullName,
-              age: age,
-              parentName: parentName,
-              parentContactNumber: parentContactNumber,
-              isActive: true,
-              classIds: [],
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            );
-
-            debugPrint(
-              'Using repository with student data: ${jsonEncode(newStudent.toJson())}',
-            );
-
-            // Use repository which should handle the API call internally
-            final createdStudent = await _studentRepository.createStudent(
-              newStudent,
-            );
-
-            debugPrint(
-              'Student created successfully via repository: ${createdStudent.id}',
-            );
-          } catch (repoError) {
-            debugPrint('Repository fallback also failed: $repoError');
-
-            // Try one more direct POST with minimal data as last attempt
-            try {
-              debugPrint('Final attempt: Direct minimal POST to /student');
-              final minimalPayload = {
-                'fullName': fullName,
-                'parentContactNumber': parentContactNumber,
-              };
-
-              await http.post(
-                Uri.parse('http://localhost:3000/student'),
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode(minimalPayload),
-              );
-
-              debugPrint('Minimal POST succeeded');
-            } catch (finalError) {
-              debugPrint('All attempts failed. Last error: $finalError');
-              throw Exception(
-                'Failed to create student after multiple attempts. Please try again later.',
-              );
-            }
-          }
+          debugPrint('Failed to create student: $e');
+          throw Exception('Failed to create student: $e');
         }
       } else {
         // Update existing student

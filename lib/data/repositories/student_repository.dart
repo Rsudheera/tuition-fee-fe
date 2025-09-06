@@ -59,6 +59,34 @@ class StudentRepository {
     }
   }
 
+  Future<Map<String, dynamic>> createStudentDirect({
+    required String fullName,
+    required String parentContactNumber,
+    int? age,
+    String? parentName,
+  }) async {
+    try {
+      print('Creating student directly via repository');
+      final Map<String, dynamic> requestBody = {
+        'fullName': fullName,
+        'age': age,
+        'parentName': parentName,
+        'parentContactNumber': parentContactNumber,
+      };
+
+      print('Sending request body: $requestBody');
+      final response = await _apiService.post(
+        ApiEndpoints.createStudent,
+        requestBody,
+      );
+      print('Student created successfully: $response');
+      return response;
+    } catch (e) {
+      print('Failed to create student: $e');
+      throw Exception('Failed to create student: $e');
+    }
+  }
+
   Future<Student> updateStudent(Student student) async {
     try {
       final response = await _apiService.put(

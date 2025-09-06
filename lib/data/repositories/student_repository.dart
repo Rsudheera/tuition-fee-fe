@@ -122,4 +122,40 @@ class StudentRepository {
       rethrow;
     }
   }
+
+  Future<bool> assignStudentToClass(String studentId, String classId) async {
+    try {
+      print('Assigning student $studentId to class $classId');
+      final response = await _apiService.post(
+        ApiEndpoints.assignStudentToClass,
+        {'studentId': studentId, 'classId': classId},
+      );
+      print('Assignment response: $response');
+      return response['success'] ?? false;
+    } catch (e) {
+      print('API error during student assignment: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> removeStudentFromClass(String studentId, String classId) async {
+    try {
+      // Get the current student
+      final student = await _apiService.get(
+        '${ApiEndpoints.getStudents}/$studentId',
+      );
+      final updatedClassIds = List<String>.from(student['classIds'] ?? [])
+        ..remove(classId);
+
+      // Update the student with new class list
+      final response = await _apiService.put(
+        '${ApiEndpoints.updateStudent}/$studentId',
+        {'classIds': updatedClassIds},
+      );
+      return response['success'] ?? false;
+    } catch (e) {
+      print('API error during student removal from class: $e');
+      rethrow;
+    }
+  }
 }

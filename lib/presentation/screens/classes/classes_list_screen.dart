@@ -4,7 +4,6 @@ import '../../../data/models/tuition_class.dart';
 import '../../../data/repositories/class_repository.dart';
 import '../../widgets/classes/class_card.dart';
 import 'class_form_screen.dart';
-import 'assign_students_screen.dart';
 
 class ClassesListScreen extends StatefulWidget {
   const ClassesListScreen({super.key});
@@ -82,18 +81,6 @@ class _ClassesListScreenState extends State<ClassesListScreen> {
       appBar: AppBar(
         title: const Text('Classes'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.group_add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AssignStudentsScreen(),
-                ),
-              ).then((_) => _fetchClasses());
-            },
-            tooltip: 'Assign Students',
-          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _fetchClasses,

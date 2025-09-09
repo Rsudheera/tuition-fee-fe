@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/notification_utils.dart';
 import '../../../data/models/student.dart';
+import '../../../data/models/tuition_class.dart';
 import '../../../data/repositories/student_repository.dart';
+import '../../../data/repositories/class_repository.dart';
 
 class StudentFormScreen extends StatefulWidget {
   final Student? student;
@@ -23,9 +25,13 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
       TextEditingController();
 
   final StudentRepository _studentRepository = StudentRepository();
+  final ClassRepository _classRepository = ClassRepository();
 
   bool _isLoading = false;
   bool _isFormValid = false; // Track if the form is valid
+
+  List<TuitionClass> _availableClasses = [];
+  List<String> _selectedClassIds = [];
 
   @override
   void initState() {
@@ -43,6 +49,9 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
       // Set parent name and contact if available
       _parentNameController.text = widget.student!.parentName ?? '';
       _parentContactController.text = widget.student!.parentContactNumber ?? '';
+
+      // Set selected classes if available
+      _selectedClassIds = List<String>.from(widget.student!.classIds);
     }
 
     // Add listeners to required fields
@@ -51,6 +60,33 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
 
     // Initial validation
     _validateForm();
+
+    // Load available classes
+    _loadClasses();
+  }
+
+  // Load available classes from the repository
+  Future<void> _loadClasses() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      _availableClasses = await _classRepository.getClasses();
+    } catch (e) {
+      if (mounted) {
+        NotificationUtils.showErrorNotification(
+          context,
+          'Error loading classes: ${e.toString()}',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   // Validate required fields - only full name and contact are required
@@ -111,6 +147,7 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
             parentContactNumber: parentContactNumber,
             age: age,
             parentName: parentName,
+            classIds: _selectedClassIds, // Include selected classes
           );
 
           debugPrint('Student created successfully via repository');
@@ -127,7 +164,7 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
           age: age,
           parentName: parentName,
           parentContactNumber: parentContactNumber,
-          classIds: widget.student!.classIds,
+          classIds: _selectedClassIds, // Update with selected classes
           updatedAt: DateTime.now(),
         );
         await _studentRepository.updateStudent(updatedStudent);
@@ -271,6 +308,66 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                         // You could add phone number validation here
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Class Selection (multi-select)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Select Classes',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ..._availableClasses.map((classItem) {
+                                final isSelected = _selectedClassIds.contains(
+                                  classItem.id,
+                                );
+                                return CheckboxListTile(
+                                  title: Text(classItem.name),
+                                  subtitle: Text(
+                                    '${classItem.subject ?? 'No Subject'} - ${classItem.monthlyFee} LKR',
+                                  ),
+                                  value: isSelected,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (value == true) {
+                                        _selectedClassIds.add(classItem.id);
+                                      } else {
+                                        _selectedClassIds.remove(classItem.id);
+                                      }
+                                    });
+                                  },
+                                  dense: true,
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                );
+                              }).toList(),
+                              if (_availableClasses.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text('No classes available'),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 32),
 

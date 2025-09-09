@@ -64,6 +64,7 @@ class StudentRepository {
     required String parentContactNumber,
     int? age,
     String? parentName,
+    List<String>? classIds,
   }) async {
     try {
       print('Creating student directly via repository');
@@ -72,6 +73,7 @@ class StudentRepository {
         'age': age,
         'parentName': parentName,
         'parentContactNumber': parentContactNumber,
+        'classIds': classIds ?? [],
       };
 
       print('Sending request body: $requestBody');

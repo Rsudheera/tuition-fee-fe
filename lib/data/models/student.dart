@@ -1,3 +1,39 @@
+class Enrollment {
+  final String id;
+  final String studentId;
+  final String classId;
+  final Map<String, dynamic>? classDetails;
+  final bool status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Enrollment({
+    required this.id,
+    required this.studentId,
+    required this.classId,
+    this.classDetails,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Enrollment.fromJson(Map<String, dynamic> json) {
+    return Enrollment(
+      id: json['id'] ?? '',
+      studentId: json['studentId'] ?? '',
+      classId: json['classId'] ?? '',
+      classDetails: json['class'],
+      status: json['status'] ?? true,
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updatedAt'] ?? DateTime.now().toIso8601String(),
+      ),
+    );
+  }
+}
+
 class Student {
   final String id;
   final String fullName; // Changed to fullName from firstName + lastName
@@ -12,6 +48,7 @@ class Student {
   final String? grade;
   final String? teacherId;
   final List<String> classIds;
+  final List<Enrollment> enrollments;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -29,6 +66,7 @@ class Student {
     this.grade,
     this.teacherId,
     this.classIds = const [],
+    this.enrollments = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -46,6 +84,14 @@ class Student {
       extractedTeacherId = studentData['teacher']['id'];
     }
 
+    // Parse enrollments array
+    List<Enrollment> enrollmentsList = [];
+    if (studentData['enrollments'] is List) {
+      enrollmentsList = (studentData['enrollments'] as List)
+          .map((enrollmentJson) => Enrollment.fromJson(enrollmentJson))
+          .toList();
+    }
+
     return Student(
       id: studentData['id'] ?? '',
       fullName: studentData['fullName'] ?? '',
@@ -60,6 +106,7 @@ class Student {
       grade: studentData['grade'],
       teacherId: extractedTeacherId ?? studentData['teacherId'],
       classIds: parseClassIds(studentData['classIds']),
+      enrollments: enrollmentsList,
       createdAt: DateTime.parse(
         studentData['createdAt'] ?? DateTime.now().toIso8601String(),
       ),
@@ -103,6 +150,7 @@ class Student {
     String? grade,
     String? teacherId,
     List<String>? classIds,
+    List<Enrollment>? enrollments,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -120,9 +168,27 @@ class Student {
       grade: grade ?? this.grade,
       teacherId: teacherId ?? this.teacherId,
       classIds: classIds ?? this.classIds,
+      enrollments: enrollments ?? this.enrollments,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
+  }
+
+  /// Helper method to check if student is enrolled in any classes
+  bool get isEnrolled => enrollments.isNotEmpty;
+
+  /// Helper method to get the count of active enrollments
+  int get enrollmentCount => enrollments.where((e) => e.status).length;
+
+  /// Helper method to get enrollment status text
+  String get enrollmentStatus => isEnrolled ? 'Enrolled' : 'Not Enrolled';
+
+  /// Helper method to get class names from enrollments
+  List<String> get enrolledClassNames {
+    return enrollments
+        .where((e) => e.status && e.classDetails != null)
+        .map((e) => e.classDetails!['name']?.toString() ?? 'Unknown Class')
+        .toList();
   }
 
   /// Helper method to safely parse classIds from various potential formats

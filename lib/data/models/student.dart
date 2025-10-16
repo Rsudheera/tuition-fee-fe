@@ -59,7 +59,7 @@ class Student {
       school: studentData['school'],
       grade: studentData['grade'],
       teacherId: extractedTeacherId ?? studentData['teacherId'],
-      classIds: List<String>.from(studentData['classIds'] ?? []),
+      classIds: parseClassIds(studentData['classIds']),
       createdAt: DateTime.parse(
         studentData['createdAt'] ?? DateTime.now().toIso8601String(),
       ),
@@ -123,5 +123,18 @@ class Student {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
+  }
+
+  /// Helper method to safely parse classIds from various potential formats
+  static List<String> parseClassIds(dynamic classIdsData) {
+    if (classIdsData == null) {
+      return [];
+    } else if (classIdsData is List) {
+      return List<String>.from(classIdsData.map((item) => item.toString()));
+    } else if (classIdsData is String) {
+      // Handle case where a single class ID might be provided as a string
+      return [classIdsData];
+    }
+    return [];
   }
 }

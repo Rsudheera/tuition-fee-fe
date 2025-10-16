@@ -73,7 +73,7 @@ class StudentRepository {
         'age': age,
         'parentName': parentName,
         'parentContactNumber': parentContactNumber,
-        'classIds': classIds ?? [],
+        'classIds': classIds ?? [], // This will be an array of class IDs
       };
 
       print('Sending request body: $requestBody');
@@ -91,9 +91,17 @@ class StudentRepository {
 
   Future<Student> updateStudent(Student student) async {
     try {
+      // Convert to JSON and ensure classIds is properly sent as an array
+      final Map<String, dynamic> studentJson = student.toJson();
+
+      // Make sure classIds is always an array, even if empty
+      if (!studentJson.containsKey('classIds')) {
+        studentJson['classIds'] = [];
+      }
+
       final response = await _apiService.put(
         '${ApiEndpoints.updateStudent}/${student.id}',
-        student.toJson(),
+        studentJson,
       );
       return Student.fromJson(response['student']);
     } catch (e) {

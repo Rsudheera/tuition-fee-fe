@@ -215,7 +215,7 @@ class ClassesTab extends StatelessWidget {
           ),
         ],
       ),
-      body: const ClassesListScreen(),
+      body: const ClassesListScreen(showAppBar: false),
     );
   }
 }
@@ -243,7 +243,7 @@ class StudentsTab extends StatelessWidget {
           ),
         ],
       ),
-      body: const StudentsListScreen(),
+      body: const StudentsListScreen(showAppBar: false),
     );
   }
 }

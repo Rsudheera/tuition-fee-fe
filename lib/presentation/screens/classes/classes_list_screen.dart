@@ -6,7 +6,9 @@ import '../../widgets/classes/class_card.dart';
 import 'class_form_screen.dart';
 
 class ClassesListScreen extends StatefulWidget {
-  const ClassesListScreen({super.key});
+  final bool showAppBar;
+
+  const ClassesListScreen({super.key, this.showAppBar = true});
 
   @override
   State<ClassesListScreen> createState() => _ClassesListScreenState();
@@ -76,33 +78,56 @@ class _ClassesListScreenState extends State<ClassesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Use Scaffold with AppBar that has a refresh button
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Classes'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchClasses,
-            tooltip: 'Refresh',
+    if (widget.showAppBar) {
+      // Use Scaffold with AppBar that has a refresh button
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Classes'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _fetchClasses,
+              tooltip: 'Refresh',
+            ),
+          ],
+        ),
+        body: _buildBody(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ClassFormScreen()),
+            ).then((result) {
+              if (result == true) {
+                _fetchClasses();
+              }
+            });
+          },
+          child: const Icon(Icons.add),
+        ),
+      );
+    } else {
+      // Return only the body content when used within a tab
+      return Column(
+        children: [
+          // Add refresh button at the top when no AppBar
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _fetchClasses,
+                  tooltip: 'Refresh',
+                ),
+              ],
+            ),
           ),
+          Expanded(child: _buildBody()),
         ],
-      ),
-      body: _buildBody(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ClassFormScreen()),
-          ).then((result) {
-            if (result == true) {
-              _fetchClasses();
-            }
-          });
-        },
-        child: const Icon(Icons.add),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildBody() {

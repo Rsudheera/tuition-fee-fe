@@ -6,7 +6,9 @@ import '../../../data/repositories/class_repository.dart';
 import 'student_form_screen.dart';
 
 class StudentsListScreen extends StatefulWidget {
-  const StudentsListScreen({super.key});
+  final bool showAppBar;
+
+  const StudentsListScreen({super.key, this.showAppBar = true});
 
   @override
   State<StudentsListScreen> createState() => _StudentsListScreenState();
@@ -118,300 +120,625 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Students'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const StudentFormScreen()),
-          ).then((value) {
-            if (value == true) {
-              // Refresh the student list if a new student was added
-              _loadData();
-            }
-          });
-        },
-        tooltip: 'Add New Student',
-        child: const Icon(Icons.add),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadData,
-                    child: const Text('Retry'),
-                  ),
-                ],
+    if (widget.showAppBar) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Students'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _loadData,
+              tooltip: 'Refresh',
+            ),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StudentFormScreen(),
               ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Search bar
-                  TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Search students...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+            ).then((value) {
+              if (value == true) {
+                // Refresh the student list if a new student was added
+                _loadData();
+              }
+            });
+          },
+          tooltip: 'Add New Student',
+          child: const Icon(Icons.add),
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadData,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Search bar
+                    TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Search students...',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Status counts
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildStatusCard(
-                          'Active Students',
-                          _students.where((s) => s.isActive).length.toString(),
-                          Colors.green,
-                        ),
-                        const SizedBox(width: 16),
-                        _buildStatusCard(
-                          'Enrolled Students',
-                          _students
-                              .where((s) => s.isEnrolled)
-                              .length
-                              .toString(),
-                          Colors.blue,
-                        ),
-                        const SizedBox(width: 16),
-                        _buildStatusCard(
-                          'Inactive Students',
-                          _students.where((s) => !s.isActive).length.toString(),
-                          Colors.red,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Table header
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
+                    // Status counts
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildStatusCard(
+                            'Active Students',
+                            _students
+                                .where((s) => s.isActive)
+                                .length
+                                .toString(),
+                            Colors.green,
+                          ),
+                          const SizedBox(width: 16),
+                          _buildStatusCard(
+                            'Enrolled Students',
+                            _students
+                                .where((s) => s.isEnrolled)
+                                .length
+                                .toString(),
+                            Colors.blue,
+                          ),
+                          const SizedBox(width: 16),
+                          _buildStatusCard(
+                            'Inactive Students',
+                            _students
+                                .where((s) => !s.isActive)
+                                .length
+                                .toString(),
+                            Colors.red,
+                          ),
+                        ],
                       ),
                     ),
-                    child: const Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Name',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Enrollment',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            'Status',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        SizedBox(width: 40), // Space for the action button
-                      ],
-                    ),
-                  ),
+                    const SizedBox(height: 16),
 
-                  // Student list
-                  Expanded(
-                    child: Container(
+                    // Table header
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 16,
+                      ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
+                        color: Theme.of(context).primaryColor,
                         borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(8),
-                          bottomRight: Radius.circular(8),
+                          topLeft: Radius.circular(8),
+                          topRight: Radius.circular(8),
                         ),
                       ),
-                      child: filteredStudents.isEmpty
-                          ? const Center(child: Text('No students found'))
-                          : ListView.builder(
-                              itemCount: filteredStudents.length,
-                              itemBuilder: (context, index) {
-                                final student = filteredStudents[index];
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      bottom: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width:
-                                            index < filteredStudents.length - 1
-                                            ? 1
-                                            : 0,
+                      child: const Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'Name',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'Enrollment',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'Status',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          SizedBox(width: 40), // Space for the action button
+                        ],
+                      ),
+                    ),
+
+                    // Student list
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(8),
+                            bottomRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: filteredStudents.isEmpty
+                            ? const Center(child: Text('No students found'))
+                            : ListView.builder(
+                                itemCount: filteredStudents.length,
+                                itemBuilder: (context, index) {
+                                  final student = filteredStudents[index];
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade300,
+                                          width:
+                                              index <
+                                                  filteredStudents.length - 1
+                                              ? 1
+                                              : 0,
+                                        ),
                                       ),
                                     ),
+                                    child: ListTile(
+                                      title: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                              student.fullName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  getEnrollmentInfo(student),
+                                                  style: TextStyle(
+                                                    color: student.isEnrolled
+                                                        ? Colors.green
+                                                        : Colors.orange,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                                if (student.isEnrolled) ...[
+                                                  const SizedBox(height: 2),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 6,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.green
+                                                          .withOpacity(0.1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      '${student.enrollmentCount} ${student.enrollmentCount == 1 ? 'class' : 'classes'}',
+                                                      style: const TextStyle(
+                                                        color: Colors.green,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Center(
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: student.isActive
+                                                      ? Colors.green
+                                                            .withOpacity(0.1)
+                                                      : Colors.red.withOpacity(
+                                                          0.1,
+                                                        ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: Text(
+                                                  student.isActive
+                                                      ? 'Active'
+                                                      : 'Inactive',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: student.isActive
+                                                        ? Colors.green
+                                                        : Colors.red,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.more_vert),
+                                            onPressed: () {
+                                              // Show options for the student
+                                              showModalBottomSheet(
+                                                context: context,
+                                                builder: (context) =>
+                                                    _buildActionSheet(student),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () {
+                                        // Navigate to student details screen
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      );
+    } else {
+      // Return only the body content when used within a tab
+      return Column(
+        children: [
+          // Add refresh button at the top when no AppBar
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadData,
+                  tooltip: 'Refresh',
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _loadData,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Search bar
+                        TextField(
+                          decoration: const InputDecoration(
+                            hintText: 'Search students...',
+                            prefixIcon: Icon(Icons.search),
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Status counts
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildStatusCard(
+                                'Active Students',
+                                _students
+                                    .where((s) => s.isActive)
+                                    .length
+                                    .toString(),
+                                Colors.green,
+                              ),
+                              const SizedBox(width: 16),
+                              _buildStatusCard(
+                                'Enrolled Students',
+                                _students
+                                    .where((s) => s.isEnrolled)
+                                    .length
+                                    .toString(),
+                                Colors.blue,
+                              ),
+                              const SizedBox(width: 16),
+                              _buildStatusCard(
+                                'Inactive Students',
+                                _students
+                                    .where((s) => !s.isActive)
+                                    .length
+                                    .toString(),
+                                Colors.red,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Table header
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                          ),
+                          child: const Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'Name',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
-                                  child: ListTile(
-                                    title: Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            student.fullName,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'Enrollment',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  'Status',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              SizedBox(
+                                width: 40,
+                              ), // Space for the action button
+                            ],
+                          ),
+                        ),
+
+                        // Student list
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(8),
+                                bottomRight: Radius.circular(8),
+                              ),
+                            ),
+                            child: filteredStudents.isEmpty
+                                ? const Center(child: Text('No students found'))
+                                : ListView.builder(
+                                    itemCount: filteredStudents.length,
+                                    itemBuilder: (context, index) {
+                                      final student = filteredStudents[index];
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            bottom: BorderSide(
+                                              color: Colors.grey.shade300,
+                                              width:
+                                                  index <
+                                                      filteredStudents.length -
+                                                          1
+                                                  ? 1
+                                                  : 0,
                                             ),
                                           ),
                                         ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                        child: ListTile(
+                                          title: Row(
                                             children: [
-                                              Text(
-                                                getEnrollmentInfo(student),
-                                                style: TextStyle(
-                                                  color: student.isEnrolled
-                                                      ? Colors.green
-                                                      : Colors.orange,
-                                                  fontSize: 13,
+                                              Expanded(
+                                                flex: 3,
+                                                child: Text(
+                                                  student.fullName,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                                 ),
                                               ),
-                                              if (student.isEnrolled) ...[
-                                                const SizedBox(height: 2),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 6,
-                                                        vertical: 2,
+                                              Expanded(
+                                                flex: 3,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      getEnrollmentInfo(
+                                                        student,
                                                       ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.green
-                                                        .withOpacity(0.1),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          8,
+                                                      style: TextStyle(
+                                                        color:
+                                                            student.isEnrolled
+                                                            ? Colors.green
+                                                            : Colors.orange,
+                                                        fontSize: 13,
+                                                      ),
+                                                    ),
+                                                    if (student.isEnrolled) ...[
+                                                      const SizedBox(height: 2),
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 6,
+                                                              vertical: 2,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.green
+                                                              .withOpacity(0.1),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
                                                         ),
-                                                  ),
-                                                  child: Text(
-                                                    '${student.enrollmentCount} ${student.enrollmentCount == 1 ? 'class' : 'classes'}',
-                                                    style: const TextStyle(
-                                                      color: Colors.green,
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w500,
+                                                        child: Text(
+                                                          '${student.enrollmentCount} ${student.enrollmentCount == 1 ? 'class' : 'classes'}',
+                                                          style:
+                                                              const TextStyle(
+                                                                color: Colors
+                                                                    .green,
+                                                                fontSize: 11,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ),
+                                              Expanded(
+                                                flex: 2,
+                                                child: Center(
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 4,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: student.isActive
+                                                          ? Colors.green
+                                                                .withOpacity(
+                                                                  0.1,
+                                                                )
+                                                          : Colors.red
+                                                                .withOpacity(
+                                                                  0.1,
+                                                                ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      student.isActive
+                                                          ? 'Active'
+                                                          : 'Inactive',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: student.isActive
+                                                            ? Colors.green
+                                                            : Colors.red,
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ],
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.more_vert,
+                                                ),
+                                                onPressed: () {
+                                                  // Show options for the student
+                                                  showModalBottomSheet(
+                                                    context: context,
+                                                    builder: (context) =>
+                                                        _buildActionSheet(
+                                                          student,
+                                                        ),
+                                                  );
+                                                },
+                                              ),
                                             ],
                                           ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Center(
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: student.isActive
-                                                    ? Colors.green.withOpacity(
-                                                        0.1,
-                                                      )
-                                                    : Colors.red.withOpacity(
-                                                        0.1,
-                                                      ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: Text(
-                                                student.isActive
-                                                    ? 'Active'
-                                                    : 'Inactive',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: student.isActive
-                                                      ? Colors.green
-                                                      : Colors.red,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.more_vert),
-                                          onPressed: () {
-                                            // Show options for the student
-                                            showModalBottomSheet(
-                                              context: context,
-                                              builder: (context) =>
-                                                  _buildActionSheet(student),
-                                            );
+                                          onTap: () {
+                                            // Navigate to student details screen
                                           },
                                         ),
-                                      ],
-                                    ),
-                                    onTap: () {
-                                      // Navigate to student details screen
+                                      );
                                     },
                                   ),
-                                );
-                              },
-                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-    );
+          ),
+        ],
+      );
+    }
   }
 
   Widget _buildStatusCard(String title, String count, Color color) {
